@@ -11,13 +11,13 @@
 #
 include bmcremote
 
-bmcremote::idrac_setting { '129.240.224.80/bios.biosbootsettings.bootmode':
-    setting => 'bios',
+bmcremote::host { '129.240.224.80':
+#    settings => '',
 }
 
-bmcremote::idrac_setting { '129.240.224.80/nic.nicconfig.1.legacybootproto':
-    setting => 'PXE',
-}
+#bmcremote::idrac_setting { '129.240.224.80/nic.nicconfig.1.legacybootproto':
+#    setting => 'PXE',
+#}
 #
 #bmcremote::idrac_setting { '129.240.80.81/brukere.1.navn':
 #    setting => 'aaa',

@@ -14,7 +14,7 @@
 #
 
 class bmcremote (
-  $package_name = $::bmcremote::params::package_name,
+  $package_names = $::bmcremote::params::package_names,
 ) inherits bmcremote::params {
 
   # validate parameters here

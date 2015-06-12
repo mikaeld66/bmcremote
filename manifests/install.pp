@@ -5,11 +5,20 @@
 class bmcremote::install (
   ) inherits bmcremote::params {
 
+  # directory to hold the created scripts
+  file { "/usr/local/bmcremote":
+    ensure => "directory",
+    owner  => "root",
+    group  => "root",
+    mode   => 750,
+  }
+
+
   case $::osfamily {
 
     'RedHat' : {
 
-      package { $::bmcremote::package_name:
+      package { $::bmcremote::package_names:
           ensure => present,
       }
 
@@ -43,13 +52,6 @@ class bmcremote::install (
         refreshonly => true,
       }
 
-      file { '/usr/local/sbin/ensure_idrac_settings.sh':
-        ensure => 'present',
-        owner  => 'root',
-        group  => 'root',
-        mode   => '0755',
-        source => 'puppet:///modules/bmcremote/ensure_idrac_settings.sh',
-      }
     }
   }
 }

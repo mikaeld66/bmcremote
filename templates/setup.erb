@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# Template to generate a head script fragment for BMC configuration
+#
+# This first part is ment for setting up basic requirements,
+# like username and password for remote management handling
+#
+# This script is managing the host <%= @name %>
+#
+
+# External parameters
+# Must be of the form:
+#   <name>='<value>'
+#
+CONFIG_PATH='/etc/sysconfig/bmcremote'
+CONFIG_SYNTAX="^\s*#|^\s*$|^[a-zA-Z_]+='[^']*'$"
+
+HOST=<%= @name %>                       # host for which a command set is produced
+USERNAME=$user                          # default credentials if set
+SECRET=$pass
+
+# sanity checking
+if egrep -qv "${CONFIG_SYNTAX}" "$CONFIG_PATH"; then
+    echo "Error parsing config file ${CONFIG_PATH}." >&2
+    echo "The following lines in the configfile do not fit the syntax:" >&2
+    egrep -vn "${CONFIG_SYNTAX}" "$CONFIG_PATH"
+    exit 5
+fi
+
+# configuration file (somewhat) safe, use it
+source "${CONFIG_PATH}"
+
+# host specific data overrides
+if [[ -n $<%= @name %>_USERNAME ]]; then
+    USERNAME=$<%= @name %>_USERNAME
+fi
+if [[ -n $<%= @name %>_SECRET ]]; then
+    SECRET=$<%= @name %>_SECRET
+fi
+

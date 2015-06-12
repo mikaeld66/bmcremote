@@ -12,7 +12,7 @@ class bmcremote::params {
     'RedHat': {
       case $::manufacturer {
         /(Dell.*)|(Red Ha.*)/:  {
-          $package_name             = 'srvadmin-idracadm'
+          $package_names            = [ 'srvadmin-idracadm', 'openssl-devel']
 #         No point in checking architecture etc since this will be running on a remote host
 #          $repo_indep_mirrorlist    = "http://linux.dell.com/repo/hardware/latest/mirrors.cgi?osname=el${::lsbmajdistrelease}&basearch=\$basearch&native=1&dellsysidpluginver=\$dellsysidpluginver"
           $repo_indep_mirrorlist    = "http://linux.dell.com/repo/hardware/latest/mirrors.cgi?osname=el7&basearch=\$basearch&native=1"
