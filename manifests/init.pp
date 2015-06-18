@@ -15,6 +15,7 @@
 
 class bmcremote (
   $package_names = $::bmcremote::params::package_names,
+  $hostdata      = {},
 ) inherits bmcremote::params {
 
   # validate parameters here
@@ -22,4 +23,12 @@ class bmcremote (
   class { 'bmcremote::install': } ->
   class { 'bmcremote::config': } -> 
   Class["bmcremote"]
+
+  $host_keys = keys($hostdata)
+info("host_keys: ${host_keys}[ip]")
+
+  bmcremote::host  { $host_keys:
+    ip          => ${hostdata}[${host_keys}]['ip'],
+#    settings    => $host_keys['settings'],
+  }
 }

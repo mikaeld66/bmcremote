@@ -9,11 +9,35 @@
 # Learn more about module testing here:
 # http://docs.puppetlabs.com/guides/tests_smoke.html
 #
+$verified_certname = $::trusted['certname']
+$dot_a             = split($::verified_certname, '\.')
+$verified_host     = $dot_a[0]
+$dash_a            = split($::verified_host, '-')
+
+$location          = $::dash_a[0]
+$role              = $::dash_a[1]
+$hostid            = $::dash_a[2]
+
+## Set runmode to default if it is not provided
+#if empty($::runmode) {
+#  $runmode='default'
+#}
+## Query for hash of classes to include
+#$classes = hiera_hash('include', {})
+## Set array of classes to include for current runmode
+#$runmode_classes = $classes[$::runmode]
+
+# Output the node classification data
+info("certname=${verified_certname} location=${location} role=${role} hostid=${hostid} runmode=${::runmode}")
+#info(join($runmode_classes,' '))
+
+
+
 include bmcremote
 
-bmcremote::host { '129.240.224.80':
+#bmcremote::host { '129.240.224.80':
 #    settings => '',
-}
+#}
 
 #bmcremote::idrac_setting { '129.240.224.80/nic.nicconfig.1.legacybootproto':
 #    setting => 'PXE',

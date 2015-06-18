@@ -11,6 +11,7 @@ define bmcremote::host(
     }
   }
 ) {
+info("name: ${name}")
   case $type {
     'idrac8': {
       # device specific values if needed
