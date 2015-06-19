@@ -25,10 +25,8 @@ class bmcremote (
   Class["bmcremote"]
 
   $host_keys = keys($hostdata)
-info("host_keys: ${host_keys}[ip]")
 
   bmcremote::host  { $host_keys:
-    ip          => ${hostdata}[${host_keys}]['ip'],
-#    settings    => $host_keys['settings'],
+    data => $hostdata,
   }
 }

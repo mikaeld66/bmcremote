@@ -20,6 +20,21 @@ class bmcremote::params {
 #          $repo_specific_mirrorlist = "http://linux.dell.com/repo/hardware/latest/mirrors.cgi?osname=el${::lsbmajdistrelease}&basearch=\$basearch&native=1&sys_ven_id=\$sys_ven_id&sys_dev_id=\$sys_dev_id&dellsysidpluginver=\$dellsysidpluginver"
           $repo_specific_mirrorlist = "http://linux.dell.com/repo/hardware/latest/mirrors.cgi?osname=el7&basearch=\$basearch&native=1&sys_ven_id=\$sys_ven_id&sys_dev_id=\$sys_dev_id"
           $repo_specific_gpgkey     = 'http://linux.dell.com/repo/hardware/latest/RPM-GPG-KEY-dell'
+
+          $hostdata = { 
+            'user'     => 'root',
+            'pass'     => 'calvin',
+            'ip'       => '',
+            'type'     => 'idrac8',
+            'settings' => {
+              'name_of_settings_group' => {
+                'check'  => {}, 
+                'set'    => {}, 
+                'exec'   => {}, 
+              }   
+            },
+          } 
+
         }
         default:  {
           fail("${::manufacturer} not supported")

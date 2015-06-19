@@ -7,6 +7,7 @@
 #
 # This script is managing the host <%= @name %>
 #
+##########################################################################
 
 # External parameters
 # Must be of the form:
@@ -15,7 +16,7 @@
 CONFIG_PATH='/etc/sysconfig/bmcremote'
 CONFIG_SYNTAX="^\s*#|^\s*$|^[a-zA-Z_]+='[^']*'$"
 
-HOST=<%= @name %>                       # host for which a command set is produced
+HOST=<%= @ip %>                       # host for which a command set is produced
 USERNAME=$user                          # default credentials if set
 SECRET=$pass
 
@@ -37,4 +38,132 @@ fi
 if [[ -n $<%= @name %>_SECRET ]]; then
     SECRET=$<%= @name %>_SECRET
 fi
+
+#
+# This part contains the commands to check status and ensure desired state
+#
+# The logic is divided into three parts:
+#
+#   1) check
+#       This part runs through all checks specified
+#       The result is a boolean AND of all checks
+#
+#   2) set
+#       If the result of part 1 is FALSE then part 2
+#       sets all objects according to the values specified
+#
+#   3) execute
+#       The third part executes any additional commands specified
+#       if part 2 is run
+#
+# Everything is run through once for each set defined
+#
+
+CMD="/opt/dell/srvadmin/sbin/racadm"    # path to remote admin utility
+
+
+##########################################################################
+#
+# Function library
+#
+##########################################################################
+
+#
+# Get current value
+#
+# Extracts the last non-empty line
+# Expects the result either as
+#   <key>=<setting>
+# or
+#   <setting>
+#
+# Print setting to standard out
+# Returns exit code from racadm
+#
+
+function get_current() {
+    local object=$1
+    local setting=''
+    local output
+
+    mapfile -t output < <( $CMD -r $HOST -u $USERNAME -p $SECRET get $object )
+
+    for ((i=$((${#output[@]}-1)); i >= 0; i--)) {
+        local txt
+        txt=${output[$i]//[$'\t\r']}
+        if [[ -n "${txt}" ]]; then
+            setting=${txt#*=}
+            break
+        fi
+    }
+
+    if [[ -z $setting ]]; then
+        return 1
+    fi
+    echo $setting
+    return 0
+}
+
+
+#
+# Set the required value
+#
+# Checks for indication of necessary job request
+#   Prints message to standard out if found
+#
+# Parameters:
+#   1) name of object to set
+#   2) value for object
+#
+# Returns exit status from racadm
+#
+
+function set_value() {
+    local object=$1
+    local setting=$2
+
+    local output=$( $CMD -r $HOST -u $USERNAME -p $SECRET set $object $setting )
+
+    if [ $? -gt 0 ]; then
+        return $?
+    fi
+    if [[ $output =~ "To apply modified value, create a configuration job and reboot" ]]; then
+        echo "Application necessary"
+    fi
+    return 0
+}
+
+
+#
+# Check
+#
+# Compare current and desired value
+# 
+# Parameters:
+#   1) current
+#   2) desired
+#
+# Returns 0 if equal, 1 otherwise
+#
+ 
+function compare_values() {
+    local current=$1
+    local desired=$2
+
+    shopt -s nocasematch
+    if [[ "$current" != "$desired" ]]; then
+        return 1
+    fi
+
+    # got here: all is good
+    return 0
+}
+
+i
+##########################################################################
+#
+# main body
+#
+##########################################################################
+
 

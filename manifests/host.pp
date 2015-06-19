@@ -1,17 +1,20 @@
 define bmcremote::host(
-  $type     = 'idrac8',
-  $ip       = '12.34.56.78',
-  $user     = 'root',
-  $pass     = 'calvin',
-  $settings = {
-    'name_of_settings_group' => {
-      'check' => {},
-      'set'   => {},
-      'exec'  => {},
-    }
-  }
+  $data = {}
 ) {
-info("name: ${name}")
+
+  if is_hash($data[$name]) {
+    $index = merge($bmcremote::params::hostdata, $data[$name])
+  } else {
+    $index = $bmcremote::params::hostdata
+  }
+
+  # some local variables to make it easier to handle the data
+  $user     = $index['user']
+  $pass     = $index['pass']
+  $ip       = $index['ip']
+  $type     = $index['type']
+  $settings = $index['settings']
+
   case $type {
     'idrac8': {
       # device specific values if needed
@@ -22,7 +25,6 @@ info("name: ${name}")
   }
  
   concat { "bmcremote_${name}":
-#    path  => "/etc/bmcremote/hosts/${name}.sh",
     path  => "/usr/local/bmcremote/${name}.sh",
     owner => 'root',
     group => 'root',
