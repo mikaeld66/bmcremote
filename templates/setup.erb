@@ -14,11 +14,13 @@
 #   <name>='<value>'
 #
 CONFIG_PATH='/etc/sysconfig/bmcremote'
-CONFIG_SYNTAX="^\s*#|^\s*$|^[a-zA-Z_]+='[^']*'$"
+CONFIG_SYNTAX="^\s*#|^\s*$|^[a-zA-Z_0-9]+='[^']*'$"
 
-HOST=<%= @ip %>                       # host for which a command set is produced
-USERNAME=$user                          # default credentials if set
-SECRET=$pass
+HOST=<%= @ip %>                       # adress of bmc for which a command set is produced
+USERNAME='<%= @user %>'               # default credentials if set
+SECRET='<%= @pass %>'
+# variable names can not include dash (-)
+HOSTVAR=$( echo "<%= name %>" | sed 's/-//g' )
 
 # sanity checking
 if egrep -qv "${CONFIG_SYNTAX}" "$CONFIG_PATH"; then
@@ -32,12 +34,20 @@ fi
 source "${CONFIG_PATH}"
 
 # host specific data overrides
-if [[ -n $<%= @name %>_USERNAME ]]; then
-    USERNAME=$<%= @name %>_USERNAME
+hostvarname=${HOSTVAR}_USERNAME
+if [[ ${!hostvarname} ]]; then
+    USERNAME="${!hostvarname}"
 fi
-if [[ -n $<%= @name %>_SECRET ]]; then
-    SECRET=$<%= @name %>_SECRET
+hostvarname=${HOSTVAR}_SECRET
+if [[ ${!hostvarname} ]]; then
+    SECRET="${!hostvarname}"
 fi
+
+NAME="<%= @name %>"
+echo "USERNAME: $USERNAME"
+echo "SECRET: $SECRET"
+echo "HOST: $HOST"
+echo "NAME: $NAME"
 
 #
 # This part contains the commands to check status and ensure desired state
@@ -85,13 +95,17 @@ function get_current() {
     local object=$1
     local setting=''
     local output
+    local stdout
 
-    mapfile -t output < <( $CMD -r $HOST -u $USERNAME -p $SECRET get $object )
-
-    for ((i=$((${#output[@]}-1)); i >= 0; i--)) {
+    $CMD -r $HOST -u $USERNAME -p $SECRET get $object | mapfile output
+    if [[ ${PIPESTATUS[0]} -gt 0 ]]; then
+        return 1
+    fi
+echo "output: $output"
+    for ((i=$((${#output[@]})); i >= 0; i--)) {
         local txt
         txt=${output[$i]//[$'\t\r']}
-        if [[ -n "${txt}" ]]; then
+        if [[ -n "${txt// }" ]]; then
             setting=${txt#*=}
             break
         fi
@@ -122,7 +136,8 @@ function set_value() {
     local object=$1
     local setting=$2
 
-    local output=$( $CMD -r $HOST -u $USERNAME -p $SECRET set $object $setting )
+#    local output=$( $CMD -r $HOST -u $USERNAME -p $SECRET set $object $setting )
+    echo "local output= $CMD -r $HOST -u $USERNAME -p $SECRET set $object $setting"
 
     if [ $? -gt 0 ]; then
         return $?
@@ -159,7 +174,6 @@ function compare_values() {
     return 0
 }
 
-i
 ##########################################################################
 #
 # main body

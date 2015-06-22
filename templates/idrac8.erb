@@ -7,10 +7,12 @@
 # first iterate through all the checks
 status=0
 <% @check.each do |check_key, check_value| %>
-current=$( get current "<%= check_key %>" )
-if [ $? -gt 0 ]; then exit $?; fi
-compare_values $current "<%= check_value %>"
-if [ $? -gt 0 ]; then status=1; fi
+if [ $status -eq 0 ]; then
+  current=$( get_current "<%= check_key %>" )
+  if [ $? -gt 0 ]; then exit $?; fi
+  compare_values $current "<%= check_value %>"
+  if [ $? -gt 0 ]; then status=1; fi
+fi
 <% end %>   
 
 # if 'status' is anything else than 0 at this point 
@@ -23,7 +25,7 @@ if [ $status -gt 0 ]; then
     <% end %>
     <% if @exec != {} %>
     # execute appended command set if any
-    <% @exec.each do |exec_cmd| %> $CMD -r $HOST -u $USERNAME -p $SECRET "<%= exec_cmd%>" 
+    <% @exec.each do |exec_cmd| %> echo "$CMD -r $HOST -u $USERNAME -p $SECRET '<%= exec_cmd%>' "
     <% end %>
     <% end %>
 fi
