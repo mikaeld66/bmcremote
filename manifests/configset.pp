@@ -5,7 +5,8 @@ define bmcremote::configset(
   $settings,
 ) {
   # Simplify looking up data with an index variable
-  $index = delete($name, 'bmcremote_configset_')
+#  $index = delete($name, 'bmcremote_configset_')
+  $index = delete($name, "${target}")
  
   $order = $settings[$index]['order']
   $check = $settings[$index]['check']

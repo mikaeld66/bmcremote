@@ -14,13 +14,19 @@
 #   <name>='<value>'
 #
 CONFIG_PATH='/etc/sysconfig/bmcremote'
-CONFIG_SYNTAX="^\s*#|^\s*$|^[a-zA-Z_0-9]+='[^']*'$"
+CONFIG_SYNTAX="^\s*#|^\s*$|^[a-zA-Z_0-9.]+='[^']*'$"
 
 HOST=<%= @ip %>                       # adress of bmc for which a command set is produced
 USERNAME='<%= @user %>'               # default credentials if set
 SECRET='<%= @pass %>'
-# variable names can not include dash (-)
+# variable names can not include dash (-) or stop (.)
+# so host specific usernames and passwords are entered into config file as:
+# (expanded logic)
+#   echo `fqdn` | `s/-//g | s/\./_/`_USERNAME=
+#   echo `fqdn` | `s/-//g | s/\./_/`_SECRET=
+#
 HOSTVAR=$( echo "<%= name %>" | sed 's/-//g' )
+HOSTVAR=${HOSTVAR//\./_}
 
 # sanity checking
 if egrep -qv "${CONFIG_SYNTAX}" "$CONFIG_PATH"; then
@@ -88,20 +94,28 @@ CMD="/opt/dell/srvadmin/sbin/racadm"    # path to remote admin utility
 #   <setting>
 #
 # Print setting to standard out
-# Returns exit code from racadm
+# Returns 1 if error, otherwise 0
 #
 
 function get_current() {
     local object=$1
     local setting=''
     local output
-    local stdout
 
-    $CMD -r $HOST -u $USERNAME -p $SECRET get $object | mapfile output
-    if [[ ${PIPESTATUS[0]} -gt 0 ]]; then
+    mapfile -t output < <($CMD -r $HOST -u $USERNAME -p $SECRET get $object 2>&1)
+
+    # racadm returns the text "ERROR" somewhere in the output if something went wrong
+echo "output: " >/tmp/ttt
+echo "${output[0]}" >>/tmp/ttt
+echo "${output[1]}" >>/tmp/ttt
+echo "${output[2]}" >>/tmp/ttt
+echo "${output[3]}" >>/tmp/ttt
+echo "${output[4]}" >>/tmp/ttt
+echo "${output[5]}" >>/tmp/ttt
+    if [[ ${output[@]} =~ .*ERROR.* ]]; then
         return 1
     fi
-echo "output: $output"
+
     for ((i=$((${#output[@]})); i >= 0; i--)) {
         local txt
         txt=${output[$i]//[$'\t\r']}
@@ -111,10 +125,10 @@ echo "output: $output"
         fi
     }
 
+    echo $setting
     if [[ -z $setting ]]; then
         return 1
     fi
-    echo $setting
     return 0
 }
 

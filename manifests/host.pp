@@ -40,7 +40,8 @@ define bmcremote::host(
  
   # Make resource names unique
   $configset_keys = keys($settings)
-  $configset_resources = prefix($configset_keys, 'bmcremote_configset_')
+#  $configset_resources = prefix($configset_keys, 'bmcremote_configset_')
+  $configset_resources = prefix($configset_keys, "bmcremote_${name}")
  
   bmcremote::configset { $configset_resources:
      target   => "bmcremote_${name}",
