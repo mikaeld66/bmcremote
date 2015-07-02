@@ -9,6 +9,7 @@ status=0
 <% @check.each do |check_key, check_value| %>
 if [ $status -eq 0 ]; then
   current=$( get_current "<%= check_key %>" )
+  # if return value non-zero we could not get any value, no point in continuing
   ret=$?
   if [ $ret -gt 0 ]; then exit $ret; fi
   compare_values $current "<%= check_value %>"
@@ -26,7 +27,7 @@ if [ $status -gt 0 ]; then
     <% end %>
     <% if @exec != {} %>
     # execute appended command set
-    <% @exec.each do |exec_cmd| %> echo "$CMD -r $HOST -u $USERNAME -p $SECRET '<%= exec_cmd%>' "
+    <% @exec.each do |exec_cmd| %> $CMD -r $HOST -u $USERNAME -p $SECRET <%= exec_cmd%>
     <% end %>
     <% end %>
 fi

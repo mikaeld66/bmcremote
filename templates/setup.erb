@@ -50,10 +50,10 @@ if [[ ${!hostvarname} ]]; then
 fi
 
 NAME="<%= @name %>"
-echo "USERNAME: $USERNAME"
-echo "SECRET: $SECRET"
-echo "HOST: $HOST"
-echo "NAME: $NAME"
+#echo "USERNAME: $USERNAME"
+#echo "SECRET: $SECRET"
+#echo "HOST: $HOST"
+#echo "NAME: $NAME"
 
 #
 # This part contains the commands to check status and ensure desired state
@@ -104,22 +104,12 @@ function get_current() {
 
     mapfile -t output < <($CMD -r $HOST -u $USERNAME -p $SECRET get $object 2>&1)
 
-    # racadm returns the text "ERROR" somewhere in the output if something went wrong
-echo "output: " >/tmp/ttt
-echo "${output[0]}" >>/tmp/ttt
-echo "${output[1]}" >>/tmp/ttt
-echo "${output[2]}" >>/tmp/ttt
-echo "${output[3]}" >>/tmp/ttt
-echo "${output[4]}" >>/tmp/ttt
-echo "${output[5]}" >>/tmp/ttt
-    if [[ ${output[@]} =~ .*ERROR.* ]]; then
-        return 1
-    fi
-
     for ((i=$((${#output[@]})); i >= 0; i--)) {
         local txt
         txt=${output[$i]//[$'\t\r']}
         if [[ -n "${txt// }" ]]; then
+            # racadm returns the text "ERROR" somewhere in the output if something went wrong
+            if [[ $txt =~ .*ERROR.* ]]; then return 1; fi
             setting=${txt#*=}
             break
         fi
@@ -150,8 +140,7 @@ function set_value() {
     local object=$1
     local setting=$2
 
-#    local output=$( $CMD -r $HOST -u $USERNAME -p $SECRET set $object $setting )
-    echo "local output= $CMD -r $HOST -u $USERNAME -p $SECRET set $object $setting"
+    local output=$( $CMD -r $HOST -u $USERNAME -p $SECRET set $object $setting )
 
     if [ $? -gt 0 ]; then
         return $?
